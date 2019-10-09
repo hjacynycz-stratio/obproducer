@@ -53,15 +53,15 @@ public class ObTransactionData {
 
   @JsonProperty("SourceCurrency")
   @PodamExclude
-  private String transactionSourceCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().get();
+  private String transactionSourceCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
 
   @JsonProperty("TargetCurrency")
   @PodamExclude
-  private String transactionTargetCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().get();
+  private String transactionTargetCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
 
   @JsonProperty("UnitCurrency")
   @PodamExclude
-  private String transactionUnitCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().get();
+  private String transactionUnitCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
 
   @JsonProperty("ExchangeRate")
   @Digits(integer = 1, fraction = 3)
@@ -112,11 +112,11 @@ public class ObTransactionData {
 
   @JsonProperty("CreditDebitIndicator")
   @PodamExclude
-  private String balancesCreditDebitIndicator = Stream.of("Credit", "Debit").unordered().findFirst().get();
+  private String balancesCreditDebitIndicator = Stream.of("Credit", "Debit").unordered().findAny().orElseThrow();
 
   @JsonProperty("BalancesType")
   @PodamExclude
-  private String balancesType = Stream.of("ClosingBooked", "ClosingAvailable").unordered().findFirst().get();
+  private String balancesType = Stream.of("ClosingBooked", "ClosingAvailable").unordered().findAny().orElseThrow();
 
   @JsonProperty("ClosingDateTime")
   @PodamStrategyValue(RandomLocalDateTime.class)
@@ -128,12 +128,12 @@ public class ObTransactionData {
 
   @JsonProperty("BalanceCurrency")
   @PodamExclude
-  private String balancesCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().get();
+  private String balancesCurrency = Stream.of("GBP", "EUR", "USD").unordered().findAny().orElseThrow();
 
   @JsonProperty("MerchantCategoryCode")
   @PodamExclude
   private String mccId = Stream.of("5655", "5941", "7032", "7941", "7997", "8888", "5555", "8989").unordered()
-      .findFirst().get();
+      .findAny().orElseThrow();
 
   @JsonProperty("Code")
   private String transactionCodeId;
@@ -143,7 +143,7 @@ public class ObTransactionData {
 
   @JsonProperty("AccountStatus")
   @PodamExclude
-  private String accountStatus = Stream.of("Enabled", "Disabled").unordered().findFirst().get();
+  private String accountStatus = Stream.of("Enabled", "Disabled").unordered().findFirst().orElseThrow();
 
   @JsonProperty("AccountStatusUpdateDateTime")
   @PodamStrategyValue(RandomLocalDateTime.class)
@@ -154,7 +154,7 @@ public class ObTransactionData {
 
   @JsonProperty("AccountType")
   @PodamExclude
-  private String accountType = Stream.of("Personal", "Business").unordered().findFirst().get();
+  private String accountType = Stream.of("Personal", "Business").unordered().findFirst().orElseThrow();
 
   @JsonProperty("AccountDescription")
   @Size(min = 1, max = 35)
