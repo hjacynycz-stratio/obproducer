@@ -1,0 +1,103 @@
+
+spring:
+  data:
+    jpa.repositories.enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+      use-new-id-generator-mappings: false
+    show-sql: false
+    properties:
+        javax:
+          persistence:
+            validation:
+              mode: none
+  flyway:
+    enabled: false
+    locations: classpath:/db/migration
+  datasource:
+    driverClassName: org.h2.Driver
+    url: jdbc:h2:mem:@project.artifactId@
+    continueOnError: true
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+  h2:
+    console:
+      enabled: true
+  jackson:
+    serialization:
+      WRITE_DATES_AS_TIMESTAMPS: false
+
+kafka:
+  producer:
+    topic:
+      name: topic-to-produce-to
+      partitions: 1
+      replicas: 1
+
+ob:
+
+  accountsSize: 1000
+  minPurchasesPerAccount: 5
+  maxPurchasesPerAccount: 15
+
+  eventsGenerationCron: "0 */2 * * * *"
+
+  eventsEmissionCron: "30 */1 * * * *"
+
+  minRemainingRecordsToGenerate: 1000
+
+#All but the elements chosen to distribute items can be introduced here to apply errors
+  errors:
+    -
+      percentage: 5
+      malformedField: accountStatus
+      type: regExp
+      params: "\\d{5}"
+    -
+      percentage: 3
+      malformedField: accountCurrency
+      type: regExp
+      params: "[A-Z]{4}"
+    -
+      percentage: 6
+      malformedField: accountType
+      type: regExp
+      params: "\\d{5}"
+
+  populationSelectField: accountId
+
+  enableHistory: false
+
+  populations:
+    -
+      name: highFrequencyLowAmountPurchases
+      regExp: "^\\d*[13579]$"
+      fields:
+        -
+          name: transactionAmount
+          type: bigDecimal
+          distributionAlg: uniform;10 140,gauss;100 80,uniform;0 10
+          reductionStrategy: sum
+        -
+          name: transactionBookingDateTime
+          type: deltaDays
+          distributionAlg: uniform;51 150
+          reductionStrategy: sum
+    -
+      name: lowFrequencyHighAmountPurchases
+      regExp: "^\\d*[02468]$"
+      fields:
+        -
+          name: transactionAmount
+          type: bigDecimal
+          distributionAlg: uniform;10 70,gauss;70 50,uniform;0 10
+          reductionStrategy: sum
+        -
+          name: transactionBookingDateTime
+          type: deltaDays
+          distributionAlg: uniform;0 50
+          reductionStrategy: sum

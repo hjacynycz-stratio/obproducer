@@ -1,0 +1,31 @@
+swagger: '2.0'
+info:
+  title: OpenBanking producer
+  version: 0.0.1
+basePath: /obproducer/v1
+produces:
+  - application/json
+consumes:
+  - application/json
+tags:
+  - name: obdata
+    description: Endpoint for generate OB data
+paths:
+  /obdata:
+    post:
+      summary: Generate OB data
+      responses:
+        200:
+          description: Notification is successfully sent
+        400:
+          description: |-
+            Bad request. Possible errors :-
+             - ERR_DEVICE_ID_IS_REQUIRED | Device id is required for sending notification through the PUSH channel
+        404:
+          description: |-
+            Not found. Possible errors :-
+              - ERR_USER_NOT_FOUND | When user does not exists in the users-core database
+              - ERR_DEVICE_NOT_FOUND | When device deoes not exists in the users-devices database
+        500:
+          description: |-
+            Internal server error

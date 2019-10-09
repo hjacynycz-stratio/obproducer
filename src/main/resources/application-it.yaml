@@ -1,0 +1,39 @@
+spring:
+  data:
+    jpa.repositories.enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: none
+      use-new-id-generator-mappings: false
+    show-sql: true
+  flyway:
+    enabled: false
+  datasource:
+    initialization-mode: always
+    driverClassName: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/postgres?currentSchema=@project.artifactId@_test
+    username: postgres
+    password: root
+    continueOnError: true
+    schema: classpath:sql/schema.sql
+    data: classpath:sql/data.sql
+  kafka:
+    bootstrap-servers: ${KAFKA_SERVERS}
+    producer:
+      key-deserializer: org.apache.kafka.common.serialization.StringSerializer
+      value-deserializer: org.apache.kafka.common.serialization.StringSerializer
+kafka:
+  producer:
+    topic:
+      name: topic-to-produce-to
+      partitions: 1
+      replicas: 1
+logging:
+  level:
+    root: WARN
+    org.springframework.cloud.bootstrap.config: INFO
+    com.stratio.sanitas: DEBUG
+  config: classpath:logback-spring.xml
+  pattern:
+    console: '[%clr(%-7.7t)] %d{HH:mm:ss.SSS} %clr(%-5level) %clr(%-20.20logger{0}){blue}
+      %clr(:){red} %clr(%m){faint}%n'

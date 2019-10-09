@@ -1,0 +1,23 @@
+management:
+  server:
+    port: 8091
+  endpoints:
+    web:
+      base-path: /
+server:
+  port: 8080
+  servlet:
+    context-path: /@project.artifactId@
+project:
+  version: @project.version@
+spring:
+  application:
+    name: @project.artifactId@
+  cloud:
+    config:
+      enabled: false
+      uri: ${CONFIG_SERVER_URI:http://localhost:8888}
+      username: ${VAULT_BASIC_USERNAME:}
+      password: ${VAULT_BASIC_PASSWORD:}
+      label: ${spring.application.name}
+      failFast: true

@@ -1,0 +1,34 @@
+
+Si usas IntelliJ IDEA, resuelve las dependencias de este modulo arrastrando el pom.xml de "it" al menu sidebar de Maven.
+
+*Sólo ejecución local:* Antes de levantar el servicio, levantar base de datos postgres y kafka:
+
+```
+docker volume create postgres-data &&
+
+docker run --name local-postgres -d \
+  -e POSTGRES_PASSWORD=root         \
+  -p 5432:5432/tcp                  \
+  --mount source=postgres-data,destination=/var/lib/postgresql/data  \
+  postgres:latest &&
+
+docker start local-postgres &&
+
+docker run -p 2181:2181 -p 9092:9092 --env ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 --env LISTENERS=PLAINTEXT://0.0.0.0:9092 spotify/kafka
+```
+
+Para la correcta ejecución de las pruebas es necesario levantar el servicio con el perfil "it"
+
+        mvn spring-boot:run -Dspring.profiles.active=it
+
+Al realizarlo se realiza la carga de datos de prueba en la BBBB especificada en application-it.yml
+
+
+Ejecución del proyecto de pruebas de integracion:
+
+        mvn clean verify --file it/pom.xml -DHost=http://localhost -DPort=5001 -DKAFKA_SERVERS=broker-0.kafka.mesos:9093,broker-1.kafka.mesos:9093,broker-2.kafka.mesos:9093
+
+Si no se especifican los parámetros se cargan por defecto Host=http://localhost y Port=5001
+
+
+En informe resultado de la ejecución puede verse en un navegador cargano el fichero {porject_dir}/it/target/site/serenity/index.html

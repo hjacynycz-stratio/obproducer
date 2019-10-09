@@ -1,0 +1,36 @@
+{
+  "general": {
+    "serviceId": "null",
+    "dockerImage": "cicdcd/cicdcd-ms-jdk11:1.0.0",
+    "CPUs": 0.5,
+    "MEM": 1024,
+    "INSTANCES": 1,
+    "DISK": 0,
+    "GPUs": 0,
+    "networkName": "tenantproducer"
+  },
+  "environment": {
+    "vaultHost":"",
+    "configServerUri": "http://config-server.infrastructure.marathon.mesos:8080",
+    "springCloudConfigEnabled": false,
+    "asTriggerMode": "all",
+    "asMinInstances": 1,
+    "asCoolDownFactor": 3,
+    "asMicroservice": true,
+    "asMinMemPercent": 60,
+    "asMaxInstances": 1,
+    "asMaxCpuTime": 80,
+    "asMetricsPortName": "metrics",
+    "asMaxMemPercent": 85,
+    "asMinCpuTime": 60,
+    "asAutoscaleMultiplier": 1.5,
+    "asTriggerNumber": 2,
+    "configServerName": "config-server",
+    "vaultPort": 8200,
+    "springProfilesActive": "pro,info,default",
+    "deploymentEnv": "pro",
+    "approle": "{secret=role}",
+    "NEXUS_ARTIFACT_URL": "null",
+    "RESOURCES_BASE_PATH": "null"
+  }
+}

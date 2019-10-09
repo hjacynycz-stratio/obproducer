@@ -1,0 +1,220 @@
+= OBPRODUCER =
+{localdatetime}
+:toc:
+:doctype: book
+:docinfo:
+
+== Introducción
+El objetivo de este microservicio ....
+
+== Instalación y funcionamiento
+
+Utilizamos aproximación Contract First, por lo que se necesita generar un fichero api.yaml en src/main/resources con la definición del API en formato OpenAPI (Swagger file).
+
+En la fase package del ciclo de vida de Maven, se auto generarán los DTOs e interfaces de controladores de acuerdo con lo especificado en el fichero src/main/resources/api.yaml. Durante la fase de clean, se eliminarán todos los DTOs e interfaces de controladores autogenerados
+
+Este microservicio hace uso de un config manager para conectarse con un entorno productivo, hará uso de una base
+de datos postgres (si procede) por lo que no sera necesario hacer ninguna configuración especial en el microservicio, en cambio
+si se quiere hacer pruebas en local se podrá modificar o usar el fichero application-local.yml, en el cual se ha
+configurado una base de datos en memoria, H2 (si procede).
+
+Para iniciar el microservicio con la configuración local se puede ejecutar el siguiente comando:
+
+```
+mvn spring-boot:run -Dspring.profiles.active=local
+
+```
+Si se quiere consultar la base de datos H2 (si procede), se podrá hacer a través del navegador mediante la siguiente url
+```
+http://localhost:8080/h2-console
+```
+
+Si tenemos un microservicio con base de datos, por otro lado si se desea sustituir la base de datos H2 por una Base de Datos en Postgres se puede hacer uso
+del siguiente comando, siempre y cuando se tenga configurado Docker en local:
+
+```
+docker run --network host --name postgres -e POSTGRES_PASSWORD=postgres -d postgres
+
+```
+y si quieres entrar a postgres puedes utilizar el siguiente comando:
+
+```
+psql -h localhost -U postgres
+```
+
+En el caso de que hayamos elegido crear el microservicio con integración con Kafka, ya sea como productor, consumidor o ambas, tendremos Kafka autoconfigurado en las configuraciones local y de test. Por defecto, apuntará a localhost:9092. Los tests de integración deberán levantar un @EmbeddedKafka a tal efecto. Si lanzamos una ejecución local con `mvn spring:boot run -Dspring.profiles.active=local`, tendremos que levantar un Kafka con Docker en local, de la siguiente forma:
+
+```
+docker run --network host -p 2181:2181 -p 9092:9092 --env ADVERTISED_LISTENERS=PLAINTEXT://localhost:9092 --env LISTENERS=PLAINTEXT://0.0.0.0:9092 spotify/kafka
+```
+
+Para la configuración productiva, Kafka se autoconfigurará con variables de entorno a partir de lo especificado en el fichero entrypoint-ms.sh, con los valores de configuración de config server o del descriptor de marathon.
+
+Una vez ejecutado y arrancado, se puede visualizar su API mediante la interfaz de swagger en el siguiente
+endpoint:
+
+```
+http://localhost:8080/obproducer/swagger-ui.html
+```
+
+== Tests de contrato con Pact Broker ==
+
+El microservicio está integrado con Pact Broker para generar y verificar los pactos de mensajería y REST que consume/produce.
+
+Pact Broker usa el paradigma de Consumer Driven para generar y verificar los pactos, por lo que la idea es generar los pactos como consumidor de APIs y/o mensajes y verificar los pactos como productor de APIs y/o mensajes.
+
+Ambos procesos se ejecutan durante el goal de test definido para el plugin de maven-surefire. Este goal de test se ejecuta durante la fase test del ciclo de vida del proyecto.
+
+
+=== Configuración por defecto en el pom.xml ===
+
+Las dependencias de pact broker están añadidas por defecto. Nos centramos en el snippet de código que configura el plugin de pact broker:
+
+```
+<plugin>
+        <groupId>au.com.dius</groupId>
+        <artifactId>pact-jvm-provider-maven_2.12</artifactId>
+        <version>${pact-broker.version}</version>
+        <configuration>
+          <pactBrokerUrl>${pact-broker.url}</pactBrokerUrl>
+          <serviceProviders>
+            <serviceProvider>
+              <name>obproducer-message</name>
+              <verificationType>ANNOTATED_METHOD</verificationType>
+              <consumers>
+                <consumer>
+                  <name>consumer1</name>
+                  <pactUrl>
+                    ${pact-broker.url}/pacts/provider/obproducer-message/consumer/consumer1/version/${project.version}
+                  </pactUrl>
+                </consumer>
+              </consumers>
+            </serviceProvider>
+          </serviceProviders>
+        </configuration>
+        <executions>
+          <execution>
+            <phase>test</phase>
+            <goals>
+              <!-- Uncomment when ready to publish and verify pacts to Pact Broker Server during test phase-->
+              <!--<goal>publish</goal>-->
+              <!--<goal>verify</goal>-->
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+```
+
+* Las ejecuciones de los goals de publicación y verificación durante la fase de publish deben ser descomentadas cuando se tengan los tests desarrollados en el proyecto.
+
+* El valor de configuration.pactBrokerUrl es el que usará el goal de publish para publicar el pacto generado como consumidor.
+
+* Los distintos serviceProviders que se pueden introducir representan los mensajes que el microservicio produce y que se quieren verificar contra los distintos consumidores que referenciemos en la url (serviceProviders.serviceProvider.consumers.consumer.pactUrl).
+
+
+=== Ejemplo de test de contrato para consumidor ===
+
+El test de contrato para consumidor, deberá:
+
+* Construir el objeto que se pretende consumir.
+* Generar el pacto a partir de la definición del objeto.
+* Publicar el pacto en el servidor de Pact Broker.
+
+Un ejemplo:
+
+En src/test/groovy/com/stratio/sanitas/obproducer/pact/consumer:
+
+```
+package com.stratio.sanitas.obproducer.pact.consumer
+
+import au.com.dius.pact.consumer.groovy.messaging.PactMessageBuilder
+import au.com.dius.pact.model.v3.messaging.Message
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.stratio.barclays.obproducer.infrastructure.message.springkafka.consumer.SpringKafkaEventConsumer
+import com.stratio.barclays.obproducer.infrastructure.message.springkafka.consumer.model.SpringKafkaEventToConsume
+import spock.lang.Specification
+import spock.lang.Subject
+
+class ConsumerMessageContractSpec extends Specification {
+
+    @Subject
+    def messageHandler = new SpringKafkaEventConsumer()
+
+    def "pact for external message"() {
+
+        given:
+        def messageStream = new PactMessageBuilder().build {
+            serviceConsumer 'obproducer'
+            hasPactWith 'resource'
+            given 'a change in the external domain entities'
+            expectsToReceive 'a message with the details of the change'
+            withContent(contentType: 'application/json') {
+                id identifier
+                action string('CREATE')
+                entity string('CENTER')
+            }
+        }
+
+        when:
+        messageStream.run { Message message ->
+            def eventToConsume = new ObjectMapper().readValue(message.getContents().value, SpringKafkaEventToConsume)
+            messageHandler.consumeEvent(eventToConsume)
+        }
+
+        then:
+        // Test whatever you want
+        assert 1 == 1
+    }
+}
+```
+
+Esta clase de test, al ejecutar la especificación, generaría un pacto en target/pacts que contendrá la especificación del mensaje esperado como consumidor de Kafka.
+
+Además de generar el fichero json con el pacto, el plugin de pact broker podrá publicar el pacto en el path especificado en el pom.xml, por lo que el pacto quedará disponible en el servidor de pact broker con la versión del consumidor relativa al artefacto.
+
+Una aproximación es ejecutar el goal `mvn pact:publish` explícitamente durante el CI, tras la fase de test y con aprobación del usuario. Se generará un pacto entre el consumidor y el productor que se decida en la versión correspondiente a la versión del artefacto consumidor.
+
+
+=== Ejemplo de verificación de contrato para productor ===
+
+Como productor de APIs/mensajes, el microservicio deberá verificar que el objeto producido es el esperado por los distintos consumidores.
+
+Para ello, se deberá construir una clase de test que genere el objeto que esperamos producir:
+
+En src/test/java/com/stratio/sanitas/obproducer/pact/producer:
+
+```
+package com.stratio.sanitas.obproducer.pact.producer;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.stratio.barclays.obproducers.infrastructure.message.springkafka.producer.model.SpringKafkaEventToProduce;
+
+import au.com.dius.pact.provider.PactVerifyProvider;
+
+
+public class ProducerMessageContractTest {
+
+  @PactVerifyProvider("<VALUE_OF_EXPECTS_TO_RECEIVE_FIELD>")
+  public String verifyMessageWithEntityChange() throws JsonProcessingException {
+
+    SpringKafkaEventToProduce eventToProduce = new SpringKafkaEventToProduce();
+    //TODO: Build the object expected to be produced
+
+    return new ObjectMapper().writeValueAsString(eventToProduce);
+  }
+
+
+}
+```
+
+Esta clase de test, al ejecutar el goal verify del plugin de maven para pact broker `mvn pact:verify`, verificará que el objeto que esperamos producir es el esperado por los consumidores del mismo. Nótese que se debe anotar el método con @PactVerifyProvider con el valor de "expectsToReceiveField" especificado durante la generación del pacto por parte del consumidor.
+
+Una aproximación es ejecutar el goal `mvn pact:verify` explícitamente durante el CI, tras la fase de test y con aprobación del usuario, para los consumidores determinados en el pom.xml. Estos consumidores se explicitan para cada productor, determinandose la version del pacto con la que verificar, que debe corresponder con una versión del artefacto consumidor para la que se haya generado pacto.
+
+
+
+
+
+

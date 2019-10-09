@@ -1,0 +1,94 @@
+spring:
+  data:
+    jpa.repositories.enabled: true
+  jpa:
+    hibernate:
+      ddl-auto: update
+      use-new-id-generator-mappings: false
+    show-sql: false
+    properties:
+      default_schema: obproducer
+      javax:
+        persistence:
+          validation:
+            mode: none
+  flyway:
+    enabled: false
+    locations: classpath:/db/migration
+  datasource:
+    driverClassName: org.postgresql.Driver
+    continueOnError: true
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+kafka:
+  producer:
+    topic:
+      name: obnoheaders
+      partitions: 1
+      replicas: 1
+
+ob:
+
+  accountsSize: 10000
+  minPurchasesPerAccount: 5
+  maxPurchasesPerAccount: 15
+
+  eventsGenerationCron: "0 0 0 * * *"
+
+  eventsEmissionCron: "0 5 */2 * * *"
+
+  minRemainingRecordsToGenerate: 10000
+
+  #All but the elements chosen to distribute items can be introduced here to apply errors
+  errors:
+    -
+      percentage: 5
+      malformedField: accountStatus
+      type: regExp
+      params: "\\d{5}"
+    -
+      percentage: 3
+      malformedField: accountCurrency
+      type: regExp
+      params: "[A-Z]{4}"
+    -
+      percentage: 6
+      malformedField: accountType
+      type: regExp
+      params: "\\d{5}"
+
+  populationSelectField: accountId
+
+  enableHistory: true
+
+  populations:
+    -
+      name: highFrequencyLowAmountPurchases
+      regExp: "^\\d*[13579]$"
+      fields:
+        -
+          name: transactionAmount
+          type: bigDecimal
+          distributionAlg: uniform;10 140,gauss;100 80,uniform;0 10
+          reductionStrategy: sum
+        -
+          name: transactionBookingDateTime
+          type: deltaDays
+          distributionAlg: uniform;51 150
+          reductionStrategy: sum
+    -
+      name: lowFrequencyHighAmountPurchases
+      regExp: "^\\d*[02468]$"
+      fields:
+        -
+          name: transactionAmount
+          type: bigDecimal
+          distributionAlg: uniform;10 70,gauss;70 50,uniform;0 10
+          reductionStrategy: sum
+        -
+          name: transactionBookingDateTime
+          type: deltaDays
+          distributionAlg: uniform;0 50
+          reductionStrategy: sum
