@@ -11,6 +11,7 @@ import javax.validation.constraints.Size;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -53,15 +54,24 @@ public class ObTransactionData {
 
   @JsonProperty("SourceCurrency")
   @PodamExclude
-  private String transactionSourceCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
+  private String transactionSourceCurrency = Stream.of("GBP", "EUR", "USD")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("TargetCurrency")
   @PodamExclude
-  private String transactionTargetCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
+  private String transactionTargetCurrency = Stream.of("GBP", "EUR", "USD")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("UnitCurrency")
   @PodamExclude
-  private String transactionUnitCurrency = Stream.of("GBP", "EUR", "USD").unordered().findFirst().orElseThrow();
+  private String transactionUnitCurrency = Stream.of("GBP", "EUR", "USD")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("ExchangeRate")
   @Digits(integer = 1, fraction = 3)
@@ -112,11 +122,17 @@ public class ObTransactionData {
 
   @JsonProperty("CreditDebitIndicator")
   @PodamExclude
-  private String balancesCreditDebitIndicator = Stream.of("Credit", "Debit").unordered().findAny().orElseThrow();
+  private String balancesCreditDebitIndicator = Stream.of("Credit", "Debit")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("BalancesType")
   @PodamExclude
-  private String balancesType = Stream.of("ClosingBooked", "ClosingAvailable").unordered().findAny().orElseThrow();
+  private String balancesType = Stream.of("ClosingBooked", "ClosingAvailable")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("ClosingDateTime")
   @PodamStrategyValue(RandomLocalDateTime.class)
@@ -128,12 +144,17 @@ public class ObTransactionData {
 
   @JsonProperty("BalanceCurrency")
   @PodamExclude
-  private String balancesCurrency = Stream.of("GBP", "EUR", "USD").unordered().findAny().orElseThrow();
+  private String balancesCurrency = Stream.of("GBP", "EUR", "USD")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("MerchantCategoryCode")
   @PodamExclude
-  private String mccId = Stream.of("5655", "5941", "7032", "7941", "7997", "8888", "5555", "8989").unordered()
-      .findAny().orElseThrow();
+  private String mccId = Stream.of("5655", "5941", "7032", "7941", "7997", "8888", "5555")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("Code")
   private String transactionCodeId;
@@ -143,7 +164,10 @@ public class ObTransactionData {
 
   @JsonProperty("AccountStatus")
   @PodamExclude
-  private String accountStatus = Stream.of("Enabled", "Disabled").unordered().findFirst().orElseThrow();
+  private String accountStatus = Stream.of("Enabled", "Disabled")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("AccountStatusUpdateDateTime")
   @PodamStrategyValue(RandomLocalDateTime.class)
@@ -154,7 +178,10 @@ public class ObTransactionData {
 
   @JsonProperty("AccountType")
   @PodamExclude
-  private String accountType = Stream.of("Personal", "Business").unordered().findFirst().orElseThrow();
+  private String accountType = Stream.of("Personal", "Business")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("AccountDescription")
   @Size(min = 1, max = 35)
