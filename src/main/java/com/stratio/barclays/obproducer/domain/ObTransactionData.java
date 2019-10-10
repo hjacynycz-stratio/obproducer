@@ -174,7 +174,10 @@ public class ObTransactionData {
   private String accountStatusUpdateDateTime;
 
   @JsonProperty("AccountCurrency")
-  private String accountCurrency = "GBP";
+  private String accountCurrency = Stream.of("GBP", "EUR", "USD")
+      .sorted((o1, o2) -> ThreadLocalRandom.current().nextInt(-1, 2))
+      .findAny()
+      .get();
 
   @JsonProperty("AccountType")
   @PodamExclude
