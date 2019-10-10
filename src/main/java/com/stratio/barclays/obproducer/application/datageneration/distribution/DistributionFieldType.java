@@ -1,7 +1,7 @@
 package com.stratio.barclays.obproducer.application.datageneration.distribution;
 
-public interface DistributionFieldType<T, R> {
+public interface DistributionFieldType<T> {
 
-  R distribute(T calculatedValue, boolean enableHistory);
+  T distribute(Double calculatedValue, boolean enableHistory);
 
 }

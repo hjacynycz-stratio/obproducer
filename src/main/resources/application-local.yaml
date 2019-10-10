@@ -70,7 +70,7 @@ ob:
 
   populationSelectField: accountId
 
-  enableHistory: false
+  enableHistory: true
 
   populations:
     -

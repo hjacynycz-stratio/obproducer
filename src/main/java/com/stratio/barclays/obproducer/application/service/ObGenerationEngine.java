@@ -37,7 +37,7 @@ public class ObGenerationEngine {
         try {
           obErrorConfig.introduceError(obTransactionData);
         } catch (IntrospectionException | InvocationTargetException | IllegalAccessException e) {
-          e.printStackTrace();
+          throw new IllegalStateException("Something went wrong when introducing errors: " + e.getMessage());
         }
       }
     });
@@ -111,10 +111,12 @@ public class ObGenerationEngine {
   private List<ObTransactionData> generateObTransactionsPerAccountId(int accountId) {
 
     return Stream.generate(() -> {
+
       var transactionData = pojoGenerator.manufacturePojo(ObTransactionData.class);
       transactionData.setAccountId(String.valueOf(accountId));
       transactionData.setTransactionCardPanNumber(String.valueOf(accountId));
       return transactionData;
+
     }).limit(ThreadLocalRandom.current()
         .nextInt(obConfig.getMinPurchasesPerAccount(), obConfig.getMaxPurchasesPerAccount() + 1))
         .collect(Collectors.toList());

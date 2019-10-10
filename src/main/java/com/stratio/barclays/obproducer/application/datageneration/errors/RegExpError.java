@@ -6,22 +6,21 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
 import com.mifmif.common.regex.Generex;
-import com.stratio.barclays.obproducer.domain.ObTransactionData;
 
-public class RegExpError extends IntroducedError {
+public class RegExpError<T> extends IntroducedError<T> {
 
   public RegExpError(float percentage, String malformedField, List<String> params) {
     super(percentage, malformedField, params);
   }
 
   @Override
-  public ObTransactionData introduceError(ObTransactionData obTransactionData)
+  public T introduceError(T data)
       throws IntrospectionException, InvocationTargetException, IllegalAccessException {
 
     Generex generator = new Generex(params.get(0));
-    new PropertyDescriptor(malformedField, ObTransactionData.class).getWriteMethod()
-        .invoke(obTransactionData, generator.random());
+    new PropertyDescriptor(malformedField, data.getClass()).getWriteMethod()
+        .invoke(data, generator.random());
 
-    return obTransactionData;
+    return data;
   }
 }

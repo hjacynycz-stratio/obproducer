@@ -4,14 +4,14 @@ import javax.naming.OperationNotSupportedException;
 
 import java.util.List;
 
-public class IntroducedErrorFactory {
+public class IntroducedErrorFactory<T> {
 
-  public static IntroducedError getInstance(String type, float percentage, String malformedField, List<String> params)
+  public IntroducedError getInstance(String type, float percentage, String malformedField, List<String> params)
       throws OperationNotSupportedException {
 
     switch (type) {
       case "regExp":
-        return new RegExpError(percentage, malformedField, params);
+        return new RegExpError<T>(percentage, malformedField, params);
       default:
         throw new OperationNotSupportedException("type " + type + " not supported yet");
     }

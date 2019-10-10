@@ -4,14 +4,12 @@ import java.beans.IntrospectionException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import com.stratio.barclays.obproducer.domain.ObTransactionData;
-
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 @Getter
-public abstract class IntroducedError {
+public abstract class IntroducedError<T> {
 
   protected final float percentage;
 
@@ -19,6 +17,6 @@ public abstract class IntroducedError {
 
   protected final List<String> params;
 
-  public abstract ObTransactionData introduceError(ObTransactionData obTransactionData)
+  public abstract T introduceError(T data)
       throws IntrospectionException, InvocationTargetException, IllegalAccessException;
 }

@@ -2,7 +2,7 @@ package com.stratio.barclays.obproducer.application.datageneration.distribution;
 
 import java.time.LocalDateTime;
 
-public class DeltaDaysDistributionFieldType implements DistributionFieldType<Double, LocalDateTime> {
+public class DeltaDaysDistributionFieldType implements DistributionFieldType<LocalDateTime> {
 
   @Override
   public LocalDateTime distribute(Double calculatedValue, boolean enableHistory) {

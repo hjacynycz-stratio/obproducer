@@ -19,6 +19,7 @@ import com.stratio.barclays.obproducer.application.datageneration.errors.Introdu
 import com.stratio.barclays.obproducer.application.datageneration.errors.IntroducedErrorFactory;
 import com.stratio.barclays.obproducer.application.datageneration.reduction.FieldValueReductionStrategy;
 import com.stratio.barclays.obproducer.application.datageneration.reduction.FieldValueReductionStrategyFactory;
+import com.stratio.barclays.obproducer.domain.ObTransactionData;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -57,11 +58,15 @@ public class ObConfig implements InitializingBean {
 
   @Override
   public void afterPropertiesSet() {
+
+    IntroducedErrorFactory<ObTransactionData> introducedErrorFactory = new IntroducedErrorFactory<>();
+
     getPopulations().forEach(obPopulationConfig -> obPopulationConfig.getFields().forEach(
         DistributionField::postConstruct));
+
     introducedErrors = getErrors().stream().map(obErrorConfig -> {
       try {
-        return IntroducedErrorFactory
+        return introducedErrorFactory
             .getInstance(obErrorConfig.getType(), obErrorConfig.getPercentage(), obErrorConfig.getMalformedField(),
                 obErrorConfig.getParams());
       } catch (OperationNotSupportedException e) {
@@ -134,13 +139,16 @@ public class ObConfig implements InitializingBean {
     private FieldValueReductionStrategy fieldValueReductionStrategy;
 
     public void postConstruct() {
+
       distributionFieldType = distributionFieldTypeFactory.buildInstance(type);
+
       fieldValueCalculators = distributionAlg
           .stream()
           .map(distributionAlg -> distributionAlg.split(algorithmDelimiter)[0])
           .distinct()
           .map(fieldValueCalculatorFactory::buildInstance)
           .collect(Collectors.toMap(FieldValueCalculator::getType, e -> e));
+
       fieldValueReductionStrategy = fieldValueReductionStrategyFactory.buildInstance(reductionStrategy);
     }
 
